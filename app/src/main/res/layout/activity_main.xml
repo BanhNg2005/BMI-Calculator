@@ -26,17 +26,14 @@
         android:layout_width="50dp"
         android:layout_height="50dp"
         android:layout_marginTop="20dp"
-        android:layout_marginRight="20dp"
+        android:layout_marginEnd="20dp"
         app:layout_constraintRight_toRightOf="parent"
         app:layout_constraintTop_toTopOf="@id/imageView2"
-        app:icon="@drawable/profiie"
+        app:icon="@drawable/profile"
         app:iconSize="24dp"
-        app:iconGravity="textStart"
         app:iconTint="@android:color/black"
-        android:insetTop="0dp"
-        android:insetBottom="0dp"
-        android:padding="0dp"
-        android:gravity="center"
+        app:iconGravity="textStart"
+        app:iconPadding="0dp"
         app:cornerRadius="25dp"
         app:backgroundTint="#FFFFFF"
         />
@@ -46,27 +43,35 @@
         android:layout_width="50dp"
         android:layout_height="50dp"
         android:layout_marginTop="20dp"
-        android:layout_marginLeft="20dp"
+        android:layout_marginStart="20dp"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintTop_toTopOf="@id/imageView2"
+
+        android:text=""
+        android:padding="0dp"
+        android:insetLeft="0dp"
+        android:insetRight="0dp"
+        android:insetTop="0dp"
+        android:insetBottom="0dp"
+
         app:icon="@drawable/setting"
         app:iconSize="24dp"
         app:iconTint="@android:color/black"
         app:iconGravity="textStart"
-        android:gravity="center"
+        app:iconPadding="0dp"
+
         app:cornerRadius="25dp"
-        app:backgroundTint="#FFFFFF"
-        />
+        app:backgroundTint="#FFFFFF" />
 
     <TextView
         android:id="@+id/tvAge"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Age"
+        android:text="@string/age"
         app:layout_constraintTop_toBottomOf="@id/imageView2"
         app:layout_constraintLeft_toLeftOf="parent"
-        android:layout_marginLeft="55dp"
-        android:textSize="15dp"
+        android:layout_marginLeft="65dp"
+        android:textSize="15sp"
 
         />
 
@@ -82,7 +87,7 @@
         <com.google.android.material.textfield.TextInputEditText
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:textSize="20dp"
+            android:textSize="20sp"
             android:inputType="number"
             />
     </com.google.android.material.textfield.TextInputLayout>
@@ -92,9 +97,9 @@
         android:id="@+id/tvWeight"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginRight="20dp"
-        android:text="Weight"
-        android:textSize="15dp"
+        android:layout_marginEnd="20dp"
+        android:text="@string/weight"
+        android:textSize="15sp"
         app:layout_constraintLeft_toRightOf="@id/imageView2"
         app:layout_constraintTop_toBottomOf="@id/imageView2"
 
@@ -111,7 +116,7 @@
         <com.google.android.material.textfield.TextInputEditText
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:textSize="20dp"
+            android:textSize="20sp"
             android:inputType="number"
             />
     </com.google.android.material.textfield.TextInputLayout>
@@ -120,9 +125,9 @@
         android:id="@+id/tvGender"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginRight="20dp"
-        android:text="Gender"
-        android:textSize="15dp"
+        android:layout_marginEnd="20dp"
+        android:text="@string/gender"
+        android:textSize="15sp"
         app:layout_constraintLeft_toLeftOf="@id/tvAge"
         app:layout_constraintTop_toBottomOf="@id/tiAge"
         android:layout_marginTop="20dp"
@@ -149,12 +154,12 @@
         android:id="@+id/tvHeight"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Height"
+        android:text="@string/height"
         app:layout_constraintTop_toBottomOf="@id/tiWeight"
         app:layout_constraintLeft_toRightOf="@id/imageView2"
-        android:layout_marginRight="20dp"
+        android:layout_marginEnd="20dp"
         android:layout_marginTop="20dp"
-        android:textSize="15dp"
+        android:textSize="15sp"
 
         />
 
@@ -169,7 +174,7 @@
         <com.google.android.material.textfield.TextInputEditText
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:textSize="20dp"
+            android:textSize="20sp"
             android:inputType="number"
             />
     </com.google.android.material.textfield.TextInputLayout>
@@ -180,7 +185,7 @@
         android:id="@+id/btnCalc"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Calculate"
+        android:text="@string/calculate"
         android:backgroundTint="@color/black"
         android:layout_marginTop="40dp"
         app:layout_constraintLeft_toLeftOf="@id/imageView2"
@@ -203,7 +208,7 @@
             android:id="@+id/tvResult"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Your BMI Level:"
+            android:text="@string/your_bmi_level"
             android:textStyle="bold"
             android:textSize="16sp"/>
 
@@ -211,7 +216,7 @@
             android:id="@+id/tvResultVal"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="--"
+            android:text="@string/empty_bmi_result"
             android:textSize="18sp"
             android:layout_marginTop="5dp"/>
     </LinearLayout>
@@ -221,7 +226,7 @@
         android:id="@+id/tvGoal"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Set your BMI Goal:"
+        android:text="@string/set_your_bmi_goal"
         android:textSize="16sp"
         android:layout_marginBottom="10dp"
         app:layout_constraintBottom_toTopOf="@+id/tiGoal"
@@ -232,7 +237,7 @@
         android:id="@+id/tiGoal"
         android:layout_width="200dp"
         android:layout_height="wrap_content"
-        android:hint="Enter goal BMI"
+        android:hint="@string/enter_goal_bmi"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
