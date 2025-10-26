@@ -1,6 +1,8 @@
 package com.example.bmifrontend;
 
 import android.animation.ObjectAnimator;
+import android.content.res.ColorStateList;
+import android.graphics.Color;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
@@ -16,6 +18,7 @@ import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
 import com.google.android.material.button.MaterialButton;
+import com.google.android.material.snackbar.Snackbar;
 import com.google.android.material.textfield.TextInputEditText;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
@@ -26,6 +29,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     ImageButton imgMan, imgWoman;
     MaterialButton btnSettings, btnProfile;
     BMICustomProgressBar pbHealth;
+    private String selectedGender = null; // male, female, or null
 
 
     @Override
@@ -39,6 +43,30 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             return insets;
         });
         initialize();
+        updateGenderSelection();
+    }
+
+    private void updateGenderSelection() {
+        int selectedColor = Color.parseColor("#FFF1C4"); // light highlight
+        int defaultColor = Color.parseColor("#fbf8f3"); // layout default
+
+        if ("male".equals(selectedGender)) {
+            imgMan.setBackgroundTintList(ColorStateList.valueOf(selectedColor));
+            imgWoman.setBackgroundTintList(ColorStateList.valueOf(defaultColor));
+            imgMan.setContentDescription("Male selected");
+            imgWoman.setContentDescription("Female not selected");
+        } else if ("female".equals(selectedGender)) {
+            imgWoman.setBackgroundTintList(ColorStateList.valueOf(selectedColor));
+            imgMan.setBackgroundTintList(ColorStateList.valueOf(defaultColor));
+            imgWoman.setContentDescription("Female selected");
+            imgMan.setContentDescription("Male not selected");
+        } else {
+            // none selected
+            imgMan.setBackgroundTintList(ColorStateList.valueOf(defaultColor));
+            imgWoman.setBackgroundTintList(ColorStateList.valueOf(defaultColor));
+            imgMan.setContentDescription("Male not selected");
+            imgWoman.setContentDescription("Female not selected");
+        }
     }
 
     private void initialize() {
@@ -55,6 +83,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         btnSettings = findViewById(R.id.btnSettings);
         btnProfile = findViewById(R.id.btnProfile);
         pbHealth = findViewById(R.id.pbHealth);
+        imgMan = findViewById(R.id.imgMan);
+        imgWoman = findViewById(R.id.imgWoman);
 
         btnCalc.setOnClickListener(this);
         btnSetGoal.setOnClickListener(this);
@@ -62,6 +92,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         imgWoman.setOnClickListener(this);
         btnSettings.setOnClickListener(this);
         btnProfile.setOnClickListener(this);
+
+        imgMan.setFocusable(true);
+        imgWoman.setFocusable(true);
     }
 
     @Override
@@ -80,12 +113,36 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         if (id == R.id.btnProfile) {
             // Handle profile button click
         }
+        if (id == R.id.imgMan) {
+            selectedGender = "male";
+            updateGenderSelection();
+        }
+        if (id == R.id.imgWoman) {
+            selectedGender = "female";
+            updateGenderSelection();
+        }
 
     }
 
     private void calculateBMI() {
         if (etWeight.getText().toString().isEmpty() || etHeight.getText().toString().isEmpty()) {
-            tvResultVal.setText("Please enter weight and height");
+            Snackbar.make(findViewById(R.id.main), "Please enter weight and height!", Snackbar.LENGTH_SHORT).show();
+            return;
+        }
+        if (etAge.getText().toString().isEmpty()) {
+            Snackbar.make(findViewById(R.id.main), "Please enter age!", Snackbar.LENGTH_SHORT).show();
+            return;
+        }
+        if (selectedGender == null) {
+            Snackbar.make(findViewById(R.id.main), "Please select gender!", Snackbar.LENGTH_SHORT).show();
+            return;
+        }
+        if (etHeight.getText().toString().equals("0")) {
+            Snackbar.make(findViewById(R.id.main), "Height cannot be zero!", Snackbar.LENGTH_SHORT).show();
+            return;
+        }
+        if (etWeight.getText().toString().equals("0")) {
+            Snackbar.make(findViewById(R.id.main), "Weight cannot be zero!", Snackbar.LENGTH_SHORT).show();
             return;
         }
 
@@ -98,7 +155,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             try {
                 age = Integer.parseInt(ageStr);
             } catch (NumberFormatException e) {
-                tvResultVal.setText("Invalid age");
+                Snackbar.make(findViewById(R.id.main), "Please enter a valid age!", Snackbar.LENGTH_SHORT).show();
                 return;
             }
         }
@@ -119,7 +176,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 tvBmiCategory.setText("Obese");
             }
         } else {
-            tvBmiCategory.setText("Use BMI-for-age percentiles (under 20)");
+            tvBmiCategory.setText("");
+            ObjectAnimator.ofInt(pbHealth, "bmiValue", 0).setDuration(1000).start();
+            tvResultVal.setText("--");
+            Snackbar.make(findViewById(R.id.main), "BMI categories are for ages 20 and above only! Use BMI-for-age percentiles (under 20)", Snackbar.LENGTH_LONG).show();
         }
 
     }
