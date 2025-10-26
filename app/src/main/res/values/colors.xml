@@ -2,4 +2,15 @@
 <resources>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
+    <color name="grey">#959595</color>
+    <color name="primary">#FF14182B</color>
+    <color name="secondary">#FF222842</color>
+    <color name="lightUnderweight">#FFFFC79C</color>
+    <color name="darkUnderweight">#FFFF6F00</color>
+    <color name="lightNormal">#FF8FFFA2</color>
+    <color name="darkNormal">#FF00AD1D</color>
+    <color name="lightOverweight">#FDFFC9</color>
+    <color name="darkOverweight">#C7D500</color>
+    <color name="lightObese">#FFFF9C9C</color>
+    <color name="darkObese">#FFCC0000</color>
 </resources>
