@@ -150,11 +150,14 @@
         android:id="@+id/imgMan"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:contentDescription="@string/manImgBtn"
         app:layout_constraintTop_toBottomOf="@id/tvGender"
         app:layout_constraintLeft_toLeftOf="@id/tiAge"
         android:background="#fbf8f3"
         android:src="@drawable/man"
-
+        android:clickable="true"
+        android:focusable="true"
+        android:scaleType="fitCenter"
         />
 
     <View
@@ -172,11 +175,15 @@
         android:id="@+id/imgWoman"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:contentDescription="@string/womanImgBtn"
         app:layout_constraintTop_toBottomOf="@id/tvGender"
         app:layout_constraintLeft_toRightOf="@id/viewVertical"
         android:background="#fbf8f3"
         android:src="@drawable/woman"
-        android:layout_marginLeft="10dp"/>
+        android:layout_marginLeft="10dp"
+        android:clickable="true"
+        android:focusable="true"
+        android:scaleType="fitCenter"/>
 
 
     <TextView
@@ -261,16 +268,6 @@
 
     </LinearLayout>
 
-<!--    <ProgressBar-->
-<!--        android:id="@+id/pbHealth"-->
-<!--        style="?android:attr/progressBarStyleHorizontal"-->
-<!--        app:layout_constraintTop_toBottomOf="@id/bmiTable"-->
-<!--        app:layout_constraintLeft_toLeftOf="parent"-->
-<!--        app:layout_constraintRight_toRightOf="parent"-->
-<!--        android:layout_width="250dp"-->
-<!--        android:layout_height="wrap_content"-->
-<!--        android:layout_marginTop="10dp"-->
-<!--        />-->
     <com.example.bmifrontend.BMICustomProgressBar
         android:id="@+id/pbHealth"
         android:layout_width="match_parent"
