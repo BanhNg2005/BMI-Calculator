@@ -210,9 +210,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
         if (id == R.id.btnSettings) {
             // Handle settings button click
+            Snackbar.make(findViewById(R.id.main),
+                    "Settings - Coming Soon!",
+                    Snackbar.LENGTH_SHORT).show();
         }
         if (id == R.id.btnProfile) {
-            // Handle profile button click
+            // Show profile menu dialog
+            showProfileMenu();
         }
         if (id == R.id.imgMan) {
             selectedGender = "male";
@@ -404,8 +408,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         final Dialog dialog = new Dialog(this);
         dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
-        dialog.setContentView(R.layout.activity_weight_goal
-        );
+        dialog.setContentView(R.layout.activity_weight_goal);
         dialog.setCancelable(true);
 
         // Initialize dialog views
@@ -530,5 +533,49 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         String remaining = String.format("%.2f BMI", difference);
         tvRemainingValue.setText(remaining);
+    }
+
+    private void showProfileMenu() {
+        final Dialog dialog = new Dialog(this);
+        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
+        dialog.setContentView(R.layout.dialog_profile_menu);
+        dialog.setCancelable(true);
+
+        // Get menu items
+        LinearLayout menuHistory = dialog.findViewById(R.id.menuHistory);
+        LinearLayout menuStatistics = dialog.findViewById(R.id.menuStatistics);
+        LinearLayout menuNotifications = dialog.findViewById(R.id.menuNotifications);
+
+        // Set click listeners
+        menuHistory.setOnClickListener(v -> {
+            dialog.dismiss();
+            Snackbar.make(findViewById(R.id.main),
+                    "History - Coming Soon!",
+                    Snackbar.LENGTH_SHORT).show();
+        });
+
+        menuStatistics.setOnClickListener(v -> {
+            dialog.dismiss();
+            Snackbar.make(findViewById(R.id.main),
+                    "Statistics - Coming Soon!",
+                    Snackbar.LENGTH_SHORT).show();
+        });
+
+        menuNotifications.setOnClickListener(v -> {
+            dialog.dismiss();
+            Snackbar.make(findViewById(R.id.main),
+                    "Notifications - Coming Soon!",
+                    Snackbar.LENGTH_SHORT).show();
+        });
+
+        dialog.show();
+
+        // Set dialog width
+        if (dialog.getWindow() != null) {
+            dialog.getWindow().setLayout(
+                    (int) (getResources().getDisplayMetrics().widthPixels * 0.85),
+                    LinearLayout.LayoutParams.WRAP_CONTENT
+            );
+        }
     }
 }
