@@ -24,6 +24,13 @@
     <string name="bmi_remaining">BMI Remaining:</string>
     <string name="cancel">Cancel</string>
 
+    <!-- Firebase/Google Sign-In -->
+    <string name="default_web_client_id">703565416770-PLACEHOLDER.apps.googleusercontent.com</string>
+
+    <!-- Facebook App ID - You need to get this from Facebook Developer Console -->
+    <string name="facebook_app_id">YOUR_FACEBOOK_APP_ID</string>
+    <string name="fb_login_protocol_scheme">fbYOUR_FACEBOOK_APP_ID</string>
+
     <string-array name="spinner_items">
         <item>Male</item>
         <item>Female</item>
@@ -59,4 +66,5 @@
     <string name="facebook_login">Login with Facebook</string>
     <string name="google_login">Login with Google</string>
     <string name="apple_login">Login with Apple</string>
+
 </resources>

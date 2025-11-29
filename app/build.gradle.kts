@@ -45,9 +45,18 @@ dependencies {
     implementation(libs.credentials.play.services.auth)
     implementation(libs.googleid)
     implementation(libs.firebase.database)
+    implementation(libs.firebase.firestore)
     testImplementation(libs.junit)
     androidTestImplementation(libs.ext.junit)
     androidTestImplementation(libs.espresso.core)
     implementation(platform("com.google.firebase:firebase-bom:34.6.0"))
     implementation("com.google.firebase:firebase-analytics")
+    // Google Sign-In
+    implementation("com.google.android.gms:play-services-auth:20.7.0")
+    // Facebook Login
+    implementation("com.facebook.android:facebook-login:16.0.0")
+    // Firebase Auth & Firestore
+    implementation("com.google.firebase:firebase-auth:22.1.0")
+    implementation("com.google.firebase:firebase-firestore:24.5.0")
+    implementation("com.google.android.material:material:1.9.0")
 }
