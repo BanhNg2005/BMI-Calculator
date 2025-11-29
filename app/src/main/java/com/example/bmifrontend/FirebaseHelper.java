@@ -122,9 +122,9 @@ public class FirebaseHelper {
         }
     }
 
-    // Set weight goal
-    public void setWeightGoal(float targetWeight, float targetBmi, float startWeight,
-                              long targetDate, OnCompleteListener listener) {
+    // Set BMI goal
+    public void setBmiGoal(float targetWeight, float targetBmi, float startWeight,
+                           long targetDate, OnCompleteListener listener) {
         String userId = getCurrentUserId();
         if (userId == null) {
             listener.onFailure("User not authenticated");
@@ -156,8 +156,8 @@ public class FirebaseHelper {
                 });
     }
 
-    // Update goal progress
-    public void updateGoalProgress(float currentWeight, OnCompleteListener listener) {
+    // Update goal progress based on current BMI
+    public void updateGoalProgress(float currentBmi, OnCompleteListener listener) {
         String userId = getCurrentUserId();
         if (userId == null) {
             listener.onFailure("User not authenticated");
@@ -170,23 +170,44 @@ public class FirebaseHelper {
                     @Override
                     public void onDataChange(@NonNull DataSnapshot snapshot) {
                         if (snapshot.exists()) {
-                            Float targetWeight = snapshot.child("targetWeight").getValue(Float.class);
-                            Float startWeight = snapshot.child("startWeight").getValue(Float.class);
+                            Float targetBmi = snapshot.child("targetBmi").getValue(Float.class);
 
-                            if (targetWeight != null && startWeight != null) {
-                                float totalDistance = Math.abs(targetWeight - startWeight);
-                                float currentDistance = Math.abs(currentWeight - startWeight);
-                                float progress = (currentDistance / totalDistance) * 100;
-                                progress = Math.min(100, Math.max(0, progress));
+                            // Get start BMI from personalInfo
+                            databaseReference.child(USERS_PATH).child(userId).child("personalInfo")
+                                    .addListenerForSingleValueEvent(new ValueEventListener() {
+                                        @Override
+                                        public void onDataChange(@NonNull DataSnapshot personalSnapshot) {
+                                            Float startWeight = snapshot.child("startWeight").getValue(Float.class);
+                                            Float height = personalSnapshot.child("height").getValue(Float.class);
 
-                                Map<String, Object> updates = new HashMap<>();
-                                updates.put("goals/currentGoal/progress", progress);
-                                updates.put("personalInfo/currentWeight", currentWeight);
+                                            if (targetBmi != null && startWeight != null && height != null) {
+                                                // Calculate start BMI
+                                                float heightInMeters = height / 100;
+                                                float startBmi = startWeight / (heightInMeters * heightInMeters);
 
-                                databaseReference.child(USERS_PATH).child(userId).updateChildren(updates)
-                                        .addOnSuccessListener(aVoid -> listener.onSuccess())
-                                        .addOnFailureListener(e -> listener.onFailure(e.getMessage()));
-                            }
+                                                float totalDistance = Math.abs(targetBmi - startBmi);
+                                                float currentDistance = Math.abs(currentBmi - startBmi);
+                                                float progress = totalDistance > 0 ? (currentDistance / totalDistance) * 100 : 0;
+                                                progress = Math.min(100, Math.max(0, progress));
+
+                                                Map<String, Object> updates = new HashMap<>();
+                                                updates.put("goals/currentGoal/progress", progress);
+
+                                                databaseReference.child(USERS_PATH).child(userId).updateChildren(updates)
+                                                        .addOnSuccessListener(aVoid -> listener.onSuccess())
+                                                        .addOnFailureListener(e -> listener.onFailure(e.getMessage()));
+                                            } else {
+                                                listener.onFailure("Missing goal data");
+                                            }
+                                        }
+
+                                        @Override
+                                        public void onCancelled(@NonNull DatabaseError error) {
+                                            listener.onFailure(error.getMessage());
+                                        }
+                                    });
+                        } else {
+                            listener.onFailure("No active goal");
                         }
                     }
 
