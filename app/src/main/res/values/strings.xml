@@ -22,6 +22,33 @@
         <item>Gook</item>
     </string-array>
 
+    <string name="login">Login</string>
+    <string name="register">Register</string>
+    <string name="continue_as_guest">Continue as a guest</string>
+    <string name="plant_decoration">Plant decoration</string>
 
+    <!-- Login Screen -->
+    <string name="welcome_back">Welcome back! Glad\nto see you. Again!</string>
+    <string name="enter_email">Enter your email</string>
+    <string name="enter_password">Enter your password</string>
+    <string name="forgot_password">Forgot Password?</string>
+    <string name="or_login_with">Or Login with</string>
+    <string name="dont_have_account">Don\'t have an account?</string>
+    <string name="register_now">Register Now</string>
 
+    <!-- Register Screen -->
+    <string name="hello_register">Hello! Register to get\nstarted</string>
+    <string name="username">Username</string>
+    <string name="email">Email</string>
+    <string name="password">Password</string>
+    <string name="confirm_password">Confirm password</string>
+    <string name="or_register_with">Or Register with</string>
+    <string name="already_have_account">Already have an account?</string>
+    <string name="login_now">Login Now</string>
+
+    <!-- Common -->
+    <string name="back">Back</string>
+    <string name="facebook_login">Login with Facebook</string>
+    <string name="google_login">Login with Google</string>
+    <string name="apple_login">Login with Apple</string>
 </resources>

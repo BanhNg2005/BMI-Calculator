@@ -12,6 +12,18 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.BMIFrontEnd">
         <activity
+            android:name=".SignupActivity"
+            android:exported="false" />
+        <activity
+            android:name=".SigninActivity"
+            android:exported="false" />
+        <activity
+            android:name=".activity_welcome"
+            android:exported="false" />
+        <activity
+            android:name=".Authorization"
+            android:exported="false" />
+        <activity
             android:name=".MainActivity"
             android:exported="true">
             <intent-filter>
