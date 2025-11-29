@@ -16,6 +16,14 @@
     <string name="womanImgBtn">Woman</string>
     <string name="manImgBtn">Man</string>
 
+    <!-- BMI Goal Dialog -->
+    <string name="set_bmi_goal">Set BMI Goal</string>
+    <string name="current_bmi">Current BMI:</string>
+    <string name="goal_bmi">Goal BMI (e.g., 22.5)</string>
+    <string name="your_progress">Your Progress</string>
+    <string name="bmi_remaining">BMI Remaining:</string>
+    <string name="cancel">Cancel</string>
+
     <string-array name="spinner_items">
         <item>Male</item>
         <item>Female</item>
