@@ -22,6 +22,10 @@ import androidx.core.view.WindowInsetsCompat;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.snackbar.Snackbar;
 import com.google.android.material.textfield.TextInputEditText;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+
+import Model.User;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
 
@@ -39,6 +43,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private float currentWeight = 0f;
     private float currentHeight = 0f;
 
+    // Firebase
+    private FirebaseHelper firebaseHelper;
+    private FirebaseAuth firebaseAuth;
+    private boolean isLoadingData = false;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -49,8 +58,97 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
             return insets;
         });
+
+        // Initialize Firebase
+        firebaseHelper = new FirebaseHelper();
+        firebaseAuth = FirebaseAuth.getInstance();
+
         initialize();
         updateGenderSelection();
+
+        // Load user data if logged in
+        loadUserData();
+    }
+
+    private void loadUserData() {
+        FirebaseUser currentUser = firebaseAuth.getCurrentUser();
+
+        if (currentUser != null) {
+            // User is logged in, load their data
+            isLoadingData = true;
+            showLoadingState(true);
+
+            firebaseHelper.getUserData(new FirebaseHelper.OnUserDataListener() {
+                @Override
+                public void onSuccess(User user) {
+                    isLoadingData = false;
+                    showLoadingState(false);
+                    populateUserData(user);
+                }
+
+                @Override
+                public void onFailure(String error) {
+                    isLoadingData = false;
+                    showLoadingState(false);
+                    // User might be new, that's okay
+                    Snackbar.make(findViewById(R.id.main),
+                            "Welcome! Enter your details to get started.",
+                            Snackbar.LENGTH_SHORT).show();
+                }
+            });
+        } else {
+            // User not logged in - guest mode
+            Snackbar.make(findViewById(R.id.main),
+                    "You're using guest mode. Sign in to save your data.",
+                    Snackbar.LENGTH_LONG).show();
+        }
+    }
+
+    private void populateUserData(User user) {
+        if (user == null) return;
+
+        // Populate personal info
+        if (user.getPersonalInfo() != null) {
+            if (user.getPersonalInfo().getAge() > 0) {
+                etAge.setText(String.valueOf(user.getPersonalInfo().getAge()));
+            }
+
+            if (user.getPersonalInfo().getCurrentWeight() > 0) {
+                etWeight.setText(String.valueOf(user.getPersonalInfo().getCurrentWeight()));
+            }
+
+            if (user.getPersonalInfo().getHeight() > 0) {
+                etHeight.setText(String.valueOf((int) user.getPersonalInfo().getHeight()));
+            }
+
+            if (user.getPersonalInfo().getGender() != null) {
+                selectedGender = user.getPersonalInfo().getGender();
+                updateGenderSelection();
+            }
+
+            // Load goal BMI if exists
+            if (user.getPersonalInfo().getGoalBmi() > 0) {
+                goalBmi = user.getPersonalInfo().getGoalBmi();
+            }
+        }
+
+        // Auto-calculate BMI if we have all the data
+        if (etAge.getText() != null && !etAge.getText().toString().isEmpty() &&
+                etWeight.getText() != null && !etWeight.getText().toString().isEmpty() &&
+                etHeight.getText() != null && !etHeight.getText().toString().isEmpty() &&
+                selectedGender != null) {
+            calculateBMI();
+        }
+
+        Snackbar.make(findViewById(R.id.main),
+                "Welcome back! Your data has been loaded.",
+                Snackbar.LENGTH_SHORT).show();
+    }
+
+    private void showLoadingState(boolean loading) {
+        btnCalc.setEnabled(!loading);
+        btnBmiGoal.setEnabled(!loading);
+        btnCalc.setText(loading ? "Loading..." : getString(R.string.calculate));
     }
 
     private void updateGenderSelection() {
@@ -119,10 +217,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         if (id == R.id.imgMan) {
             selectedGender = "male";
             updateGenderSelection();
+            savePersonalInfoToFirebase();
         }
         if (id == R.id.imgWoman) {
             selectedGender = "female";
             updateGenderSelection();
+            savePersonalInfoToFirebase();
         }
     }
 
@@ -168,25 +268,130 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         currentBmi = bmi;
         tvResultVal.setText(String.format("BMI: %.2f", bmi));
 
+        String category = "";
+
         if (age >= 20) {
             if (bmi < 18.5f) {
                 ObjectAnimator.ofInt(pbHealth, "bmiValue", (int) bmi).setDuration(1000).start();
                 tvBmiCategory.setText("Underweight");
+                category = "Underweight";
             } else if (bmi < 24.9f) {
                 ObjectAnimator.ofInt(pbHealth, "bmiValue", (int) bmi).setDuration(1000).start();
                 tvBmiCategory.setText("Normal");
+                category = "Normal";
             } else if (bmi < 29.9f) {
                 ObjectAnimator.ofInt(pbHealth, "bmiValue", (int) bmi).setDuration(1000).start();
                 tvBmiCategory.setText("Overweight");
+                category = "Overweight";
             } else {
                 ObjectAnimator.ofInt(pbHealth, "bmiValue", (int) bmi).setDuration(1000).start();
                 tvBmiCategory.setText("Obese");
+                category = "Obese";
             }
+
+            // Save to Firebase
+            saveBmiCalculationToFirebase(weight, height * 100, bmi, category, age);
+
         } else {
             tvBmiCategory.setText("");
             ObjectAnimator.ofInt(pbHealth, "bmiValue", 0).setDuration(1000).start();
             tvResultVal.setText("--");
             Snackbar.make(findViewById(R.id.main), "BMI categories are for ages 20 and above only! Use BMI-for-age percentiles (under 20)", Snackbar.LENGTH_LONG).show();
+        }
+    }
+
+    private void saveBmiCalculationToFirebase(float weight, float height, float bmi, String category, int age) {
+        FirebaseUser currentUser = firebaseAuth.getCurrentUser();
+
+        if (currentUser == null) {
+            // Guest mode - don't save
+            return;
+        }
+
+        // First, update personal info
+        firebaseHelper.updatePersonalInfo(age, selectedGender, height, weight,
+                new FirebaseHelper.OnCompleteListener() {
+                    @Override
+                    public void onSuccess() {
+                        // Personal info updated
+                    }
+
+                    @Override
+                    public void onFailure(String error) {
+                        // Silent fail - personal info update is not critical
+                    }
+                });
+
+        // Then, add this as a new measurement
+        firebaseHelper.addMeasurement(weight, height, bmi, category, "",
+                new FirebaseHelper.OnCompleteListener() {
+                    @Override
+                    public void onSuccess() {
+                        // Show subtle success indicator
+                        Snackbar.make(findViewById(R.id.main),
+                                "BMI saved to your history!",
+                                Snackbar.LENGTH_SHORT).show();
+                    }
+
+                    @Override
+                    public void onFailure(String error) {
+                        Snackbar.make(findViewById(R.id.main),
+                                "Calculated, but couldn't save: " + error,
+                                Snackbar.LENGTH_SHORT).show();
+                    }
+                });
+
+        // Update goal progress if goal exists
+        if (goalBmi > 0) {
+            firebaseHelper.updateGoalProgress(currentBmi, new FirebaseHelper.OnCompleteListener() {
+                @Override
+                public void onSuccess() {
+                    // Progress updated
+                }
+
+                @Override
+                public void onFailure(String error) {
+                    // Silent fail
+                }
+            });
+        }
+    }
+
+    private void savePersonalInfoToFirebase() {
+        FirebaseUser currentUser = firebaseAuth.getCurrentUser();
+
+        if (currentUser == null || isLoadingData) {
+            return;
+        }
+
+        // Get current values
+        String ageStr = etAge.getText() != null ? etAge.getText().toString() : "";
+        String weightStr = etWeight.getText() != null ? etWeight.getText().toString() : "";
+        String heightStr = etHeight.getText() != null ? etHeight.getText().toString() : "";
+
+        if (ageStr.isEmpty() || weightStr.isEmpty() || heightStr.isEmpty() || selectedGender == null) {
+            return; // Not enough info to save
+        }
+
+        try {
+            int age = Integer.parseInt(ageStr);
+            float weight = Float.parseFloat(weightStr);
+            float height = Float.parseFloat(heightStr);
+
+            firebaseHelper.updatePersonalInfo(age, selectedGender, height, weight,
+                    new FirebaseHelper.OnCompleteListener() {
+                        @Override
+                        public void onSuccess() {
+                            // Silent success
+                        }
+
+                        @Override
+                        public void onFailure(String error) {
+                            // Silent fail
+                        }
+                    });
+        } catch (NumberFormatException e) {
+            // Invalid input, don't save
         }
     }
 
@@ -199,7 +404,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         final Dialog dialog = new Dialog(this);
         dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
-        dialog.setContentView(R.layout.activity_weight_goal);
+        dialog.setContentView(R.layout.activity_weight_goal
+        );
         dialog.setCancelable(true);
 
         // Initialize dialog views
@@ -250,11 +456,15 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 }
 
                 goalBmi = goal;
-                progressSection.setVisibility(View.VISIBLE);
-                updateProgress(progressBar, tvRemainingValue);
 
                 // Calculate target weight based on goal BMI
                 float targetWeight = goalBmi * currentHeight * currentHeight;
+
+                // Save to Firebase
+                saveGoalToFirebase(targetWeight, goal);
+
+                progressSection.setVisibility(View.VISIBLE);
+                updateProgress(progressBar, tvRemainingValue);
 
                 Snackbar.make(findViewById(R.id.main),
                         String.format("BMI goal set! Target weight: %.1f kg", targetWeight),
@@ -278,26 +488,45 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
     }
 
+    private void saveGoalToFirebase(float targetWeight, float targetBmi) {
+        FirebaseUser currentUser = firebaseAuth.getCurrentUser();
+
+        if (currentUser == null) {
+            Snackbar.make(findViewById(R.id.main),
+                    "Sign in to save your goal",
+                    Snackbar.LENGTH_SHORT).show();
+            return;
+        }
+
+        // Set target date to 3 months from now (arbitrary default)
+        long targetDate = System.currentTimeMillis() + (90L * 24 * 60 * 60 * 1000);
+
+        firebaseHelper.setBmiGoal(targetWeight, targetBmi, currentWeight, targetDate,
+                new FirebaseHelper.OnCompleteListener() {
+                    @Override
+                    public void onSuccess() {
+                        Snackbar.make(findViewById(R.id.main),
+                                "Goal saved successfully!",
+                                Snackbar.LENGTH_SHORT).show();
+                    }
+
+                    @Override
+                    public void onFailure(String error) {
+                        Snackbar.make(findViewById(R.id.main),
+                                "Couldn't save goal: " + error,
+                                Snackbar.LENGTH_SHORT).show();
+                    }
+                });
+    }
+
     private void updateProgress(ProgressBar progressBar, TextView tvRemainingValue) {
         if (goalBmi <= 0 || currentBmi <= 0) return;
 
         float difference = Math.abs(goalBmi - currentBmi);
-        float totalDistance = Math.abs(goalBmi - currentBmi);
 
-        // Calculate how far we've come from start
-        float progress;
-        if (goalBmi < currentBmi) {
-            // Losing BMI (going down)
-            progress = 0; // Just started, no progress yet
-        } else {
-            // Gaining BMI (going up)
-            progress = 0; // Just started, no progress yet
-        }
-
-        // When user updates their weight, recalculate actual progress
-        // For now, showing the remaining BMI points
-
-        progressBar.setProgress((int) progress);
+        // For now, progress is 0 when just set
+        // Later when user updates weight, this will show real progress
+        progressBar.setProgress(0);
 
         String remaining = String.format("%.2f BMI", difference);
         tvRemainingValue.setText(remaining);
