@@ -20,6 +20,10 @@
             android:value="@string/facebook_app_id"/>
 
         <activity
+            android:name=".HistoryActivity"
+            android:exported="false" />
+
+        <activity
             android:name=".WelcomeActivity"
             android:exported="true">
             <intent-filter>

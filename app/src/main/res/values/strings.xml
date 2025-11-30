@@ -96,4 +96,9 @@
     <string name="weight_change">Weight Change</string>
     <string name="days_active">Days Active</string>
     <string name="last_measurement">Last Check</string>
+
+    <!--User History Page-->
+    <string name="bmi_history">BMI History</string>
+    <string name="no_records_found">No Records Found</string>
+    <string name="your_bmi_records">Your BMI Records</string>
 </resources>
