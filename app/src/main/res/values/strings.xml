@@ -24,6 +24,13 @@
     <string name="bmi_remaining">BMI Remaining:</string>
     <string name="cancel">Cancel</string>
 
+    <!-- Firebase/Google Sign-In -->
+    <string name="default_web_client_id">703565416770-PLACEHOLDER.apps.googleusercontent.com</string>
+
+    <!-- Facebook App ID - You need to get this from Facebook Developer Console -->
+    <string name="facebook_app_id">YOUR_FACEBOOK_APP_ID</string>
+    <string name="fb_login_protocol_scheme">fbYOUR_FACEBOOK_APP_ID</string>
+
     <string-array name="spinner_items">
         <item>Male</item>
         <item>Female</item>
@@ -59,4 +66,34 @@
     <string name="facebook_login">Login with Facebook</string>
     <string name="google_login">Login with Google</string>
     <string name="apple_login">Login with Apple</string>
+
+    <!-- Profile Menu -->
+    <string name="profile_menu">Profile Menu</string>
+    <string name="go_to_history">Go to history</string>
+    <string name="go_to_statistics">Go to statistics</string>
+    <string name="go_to_notifications">Go to notifications</string>
+
+    <!-- Profile/Navigation -->
+    <string name="profile">Profile</string>
+    <string name="history">History</string>
+    <string name="statistics">Statistics</string>
+    <string name="notifications">Notifications</string>
+    <string name="coming_soon">Coming Soon</string>
+    <string name="no_history">No measurements yet</string>
+    <string name="no_statistics">No data available</string>
+
+    <!-- Statistics -->
+    <string name="bmi_statistics">BMI Statistics</string>
+    <string name="weight_statistics">Weight Statistics</string>
+    <string name="activity_statistics">Activity</string>
+    <string name="total_measurements">Total Measurements</string>
+    <string name="average_bmi">Average BMI</string>
+    <string name="current_bmi_stat">Current BMI</string>
+    <string name="goal_bmi_stat">Goal BMI</string>
+    <string name="start_weight">Start Weight</string>
+    <string name="current_weight_stat">Current</string>
+    <string name="goal_weight_stat">Goal</string>
+    <string name="weight_change">Weight Change</string>
+    <string name="days_active">Days Active</string>
+    <string name="last_measurement">Last Check</string>
 </resources>
