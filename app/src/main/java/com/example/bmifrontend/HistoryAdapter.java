@@ -4,11 +4,15 @@ import android.graphics.drawable.GradientDrawable;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.RecyclerView;
+
+import com.google.android.material.button.MaterialButton;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -20,9 +24,20 @@ import Model.User;
 public class HistoryAdapter extends RecyclerView.Adapter<HistoryAdapter.ViewHolder> {
 
     private List<User.Measurement> measurements;
+    private OnItemActionListener itemActionListener;
+    private int expandedPosition = -1;
+
+    public interface OnItemActionListener {
+        void onEditMeasurement(int position, User.Measurement measurement);
+        void onDeleteMeasurement(int position, User.Measurement measurement);
+    }
 
     public HistoryAdapter(List<User.Measurement> measurements) {
         this.measurements = measurements;
+    }
+
+    public void setOnItemActionListener(OnItemActionListener listener) {
+        this.itemActionListener = listener;
     }
 
     @NonNull
@@ -37,11 +52,67 @@ public class HistoryAdapter extends RecyclerView.Adapter<HistoryAdapter.ViewHold
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
         User.Measurement measurement = measurements.get(position);
         holder.bind(measurement);
+
+        boolean isExpanded = position == expandedPosition;
+        holder.actionButtons.setVisibility(isExpanded ? View.VISIBLE : View.GONE);
+
+        holder.btnMenu.setOnClickListener(v -> {
+            int currentPosition = holder.getAdapterPosition();
+            if (currentPosition == RecyclerView.NO_POSITION) return;
+
+            if (expandedPosition == currentPosition) {
+                expandedPosition = -1;
+                notifyItemChanged(currentPosition);
+            } else {
+                int previousExpanded = expandedPosition;
+                expandedPosition = currentPosition;
+                if (previousExpanded != -1) {
+                    notifyItemChanged(previousExpanded);
+                }
+                notifyItemChanged(currentPosition);
+            }
+        });
+
+        holder.btnEdit.setOnClickListener(v -> {
+            int currentPosition = holder.getAdapterPosition();
+            if (currentPosition == RecyclerView.NO_POSITION) return;
+
+            if (itemActionListener != null) {
+                itemActionListener.onEditMeasurement(currentPosition, measurement);
+                expandedPosition = -1;
+                notifyItemChanged(currentPosition);
+            }
+        });
+
+        holder.btnDelete.setOnClickListener(v -> {
+            int currentPosition = holder.getAdapterPosition();
+            if (currentPosition == RecyclerView.NO_POSITION) return;
+
+            if (itemActionListener != null) {
+                itemActionListener.onDeleteMeasurement(currentPosition, measurement);
+                expandedPosition = -1;
+                notifyItemChanged(currentPosition);
+            }
+        });
     }
 
     @Override
     public int getItemCount() {
         return measurements.size();
+    }
+
+    public void removeItem(int position) {
+        if (position >= 0 && position < measurements.size()) {
+            measurements.remove(position);
+            notifyItemRemoved(position);
+        }
+    }
+
+    public void updateItem(int position, User.Measurement measurement) {
+        if (position >= 0 && position < measurements.size()) {
+            measurements.set(position, measurement);
+            notifyItemChanged(position);
+        }
     }
 
     public static class ViewHolder extends RecyclerView.ViewHolder {
@@ -51,6 +122,10 @@ public class HistoryAdapter extends RecyclerView.Adapter<HistoryAdapter.ViewHold
         private TextView tvBmi;
         private TextView tvCategory;
         private View categoryIndicator;
+        private LinearLayout actionButtons;
+        private MaterialButton btnEdit;
+        private MaterialButton btnDelete;
+        private ImageView btnMenu;
 
         public ViewHolder(@NonNull View itemView) {
             super(itemView);
@@ -61,6 +136,10 @@ public class HistoryAdapter extends RecyclerView.Adapter<HistoryAdapter.ViewHold
             tvBmi = itemView.findViewById(R.id.tvBmi);
             tvCategory = itemView.findViewById(R.id.tvCategory);
             categoryIndicator = itemView.findViewById(R.id.categoryIndicator);
+            actionButtons = itemView.findViewById(R.id.actionButtons);
+            btnEdit = itemView.findViewById(R.id.btnEdit);
+            btnDelete = itemView.findViewById(R.id.btnDelete);
+            btnMenu = itemView.findViewById(R.id.btnMenu);
         }
 
         public void bind(User.Measurement measurement) {
@@ -85,7 +164,6 @@ public class HistoryAdapter extends RecyclerView.Adapter<HistoryAdapter.ViewHold
             if(tvCategory != null && measurement.getCategory() != null){
                 tvCategory.setText(measurement.getCategory());
                 setCategoryColor(measurement.getCategory());
-
                 setCategoryChipColor(measurement.getCategory());
             }
         }

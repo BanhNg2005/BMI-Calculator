@@ -1,6 +1,5 @@
 package com.example.bmifrontend;
 
-import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.LinearLayout;
@@ -8,6 +7,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
@@ -16,6 +16,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.button.MaterialButton;
+import com.google.android.material.textfield.TextInputEditText;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DataSnapshot;
@@ -27,16 +28,14 @@ import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.Query;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 
 import Model.User;
 
-public class HistoryActivity extends AppCompatActivity {
+public class HistoryActivity extends AppCompatActivity implements HistoryAdapter.OnItemActionListener {
 
     private RecyclerView recyclerView;
     private HistoryAdapter historyAdapter;
@@ -80,6 +79,7 @@ public class HistoryActivity extends AppCompatActivity {
 
     private void setupRecyclerView() {
         historyAdapter = new HistoryAdapter(measurements);
+        historyAdapter.setOnItemActionListener(this);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
         recyclerView.setAdapter(historyAdapter);
     }
@@ -111,7 +111,7 @@ public class HistoryActivity extends AppCompatActivity {
                                 }
                             }
 
-                            // Sort by timestamp (newest first)
+                            // sort by new ones first
                             Collections.sort(measurements, (m1, m2) ->
                                     Long.compare(m2.getTimestamp(), m1.getTimestamp()));
 
@@ -197,5 +197,196 @@ public class HistoryActivity extends AppCompatActivity {
                     "Total records: %d", measurements.size());
             tvTitle.setText(summary);
         }
+    }
+
+    @Override
+    public void onEditMeasurement(int position, User.Measurement measurement) {
+        showEditMeasurementDialog(position, measurement);
+    }
+
+    @Override
+    public void onDeleteMeasurement(int position, User.Measurement measurement) {
+        showDeleteConfirmationDialog(position, measurement);
+    }
+
+    private void showEditMeasurementDialog(int position, User.Measurement measurement) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("Edit Measurement");
+
+        LinearLayout layout = new LinearLayout(this);
+        layout.setOrientation(LinearLayout.VERTICAL);
+        layout.setPadding(50, 20, 50, 20);
+
+        // weight input
+        TextInputEditText etWeight = new TextInputEditText(this);
+        etWeight.setHint("Weight (kg)");
+        etWeight.setText(String.valueOf(measurement.getWeight()));
+        layout.addView(etWeight);
+
+        // height input
+        TextInputEditText etHeight = new TextInputEditText(this);
+        etHeight.setHint("Height (cm)");
+        etHeight.setText(String.valueOf(measurement.getHeight()));
+        layout.addView(etHeight);
+
+        builder.setView(layout);
+
+        builder.setPositiveButton("Save", (dialog, which) -> {
+            String weightStr = etWeight.getText().toString();
+            String heightStr = etHeight.getText().toString();
+
+            if (!weightStr.isEmpty() && !heightStr.isEmpty()) {
+                try {
+                    float weight = Float.parseFloat(weightStr);
+                    float height = Float.parseFloat(heightStr);
+
+                    if (weight <= 0 || height <= 0) {
+                        Toast.makeText(this, "Please enter positive values", Toast.LENGTH_SHORT).show();
+                        return;
+                    }
+
+                    // recalculate BMI
+                    float heightInMeters = height / 100;
+                    float bmi = weight / (heightInMeters * heightInMeters);
+
+                    // set new category
+                    String category = getBmiCategory(bmi);
+
+                    // update measurement
+                    measurement.setWeight(weight);
+                    measurement.setHeight(height);
+                    measurement.setBmi(bmi);
+                    measurement.setCategory(category);
+
+                    updateMeasurementInFirebase(position, measurement);
+
+                } catch (NumberFormatException e) {
+                    Toast.makeText(this, "Please enter valid numbers", Toast.LENGTH_SHORT).show();
+                }
+            } else {
+                Toast.makeText(this, "Please fill all fields", Toast.LENGTH_SHORT).show();
+            }
+        });
+
+        builder.setNegativeButton("Cancel", null);
+        builder.show();
+    }
+
+    private String getBmiCategory(float bmi) {
+        if (bmi < 18.5f) return "Underweight";
+        else if (bmi < 24.9f) return "Normal";
+        else if (bmi < 29.9f) return "Overweight";
+        else return "Obese";
+    }
+
+    private void showDeleteConfirmationDialog(int position, User.Measurement measurement) {
+        new AlertDialog.Builder(this)
+                .setTitle("Delete Measurement")
+                .setMessage("Are you sure you want to delete this measurement?")
+                .setPositiveButton("Delete", (dialog, which) -> {
+                    deleteMeasurementFromFirebase(position, measurement);
+                })
+                .setNegativeButton("Cancel", null)
+                .show();
+    }
+
+    private void updateMeasurementInFirebase(int position, User.Measurement measurement) {
+        FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
+        if (currentUser == null) {
+            Toast.makeText(this, "Please sign in to edit measurements", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        DatabaseReference userRef = FirebaseDatabase.getInstance().getReference()
+                .child("users").child(currentUser.getUid()).child("measurements");
+
+        userRef.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                String measurementKey = null;
+                for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
+                    User.Measurement existingMeasurement = snapshot.getValue(User.Measurement.class);
+                    if (existingMeasurement != null &&
+                            existingMeasurement.getTimestamp() == measurement.getTimestamp()) {
+                        measurementKey = snapshot.getKey();
+                        break;
+                    }
+                }
+
+                if (measurementKey != null) {
+                    userRef.child(measurementKey).setValue(measurement)
+                            .addOnSuccessListener(aVoid -> {
+                                historyAdapter.updateItem(position, measurement);
+                                Toast.makeText(HistoryActivity.this,
+                                        "Measurement updated", Toast.LENGTH_SHORT).show();
+                            })
+                            .addOnFailureListener(e -> {
+                                Toast.makeText(HistoryActivity.this,
+                                        "Failed to update measurement", Toast.LENGTH_SHORT).show();
+                            });
+                } else {
+                    Toast.makeText(HistoryActivity.this,
+                            "Measurement not found", Toast.LENGTH_SHORT).show();
+                }
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+                Toast.makeText(HistoryActivity.this,
+                        "Error updating measurement", Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+
+    private void deleteMeasurementFromFirebase(int position, User.Measurement measurement) {
+        FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
+        if (currentUser == null) {
+            Toast.makeText(this, "Please sign in to delete measurements", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        DatabaseReference userRef = FirebaseDatabase.getInstance().getReference()
+                .child("users").child(currentUser.getUid()).child("measurements");
+
+        userRef.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                String measurementKey = null;
+                for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
+                    User.Measurement existingMeasurement = snapshot.getValue(User.Measurement.class);
+                    if (existingMeasurement != null &&
+                            existingMeasurement.getTimestamp() == measurement.getTimestamp()) {
+                        measurementKey = snapshot.getKey();
+                        break;
+                    }
+                }
+
+                if (measurementKey != null) {
+                    userRef.child(measurementKey).removeValue()
+                            .addOnSuccessListener(aVoid -> {
+                                historyAdapter.removeItem(position);
+                                Toast.makeText(HistoryActivity.this,
+                                        "Measurement deleted", Toast.LENGTH_SHORT).show();
+
+                                if (historyAdapter.getItemCount() == 0) {
+                                    showEmptyState();
+                                }
+                            })
+                            .addOnFailureListener(e -> {
+                                Toast.makeText(HistoryActivity.this,
+                                        "Failed to delete measurement", Toast.LENGTH_SHORT).show();
+                            });
+                } else {
+                    Toast.makeText(HistoryActivity.this,
+                            "Measurement not found", Toast.LENGTH_SHORT).show();
+                }
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+                Toast.makeText(HistoryActivity.this,
+                        "Error deleting measurement", Toast.LENGTH_SHORT).show();
+            }
+        });
     }
 }

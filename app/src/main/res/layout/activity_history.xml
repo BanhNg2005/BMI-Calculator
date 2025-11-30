@@ -12,7 +12,7 @@
         android:layout_height="wrap_content"
         android:orientation="horizontal"
         android:padding="16dp"
-        android:gravity="center_vertical"> <!--CHECK LATER-->
+        android:gravity="center_vertical">
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btnBack"
@@ -51,7 +51,7 @@
         <ImageView
             android:layout_width="120dp"
             android:layout_height="120dp"
-            android:src="@drawable/ic_history"
+            android:src="@drawable/ic_no_records_found"
             app:tint="#9E9E9E"/>
 
         <TextView
