@@ -113,7 +113,12 @@ public class SignupActivity extends AppCompatActivity {
             finish();
         });
 
-        btnBack.setOnClickListener(v -> finish());
+        btnBack.setOnClickListener(v -> {
+            Intent intent = new Intent(SignupActivity.this, WelcomeActivity.class);
+            intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+            startActivity(intent);
+            finish();
+        });
 
         btnGoogleLogin.setOnClickListener(v -> signInWithGoogle());
 
