@@ -33,6 +33,8 @@ android {
 }
 
 dependencies {
+
+    implementation("com.google.android.material:material:1.9.0")
     implementation(libs.appcompat)
     implementation(libs.material)
     implementation(libs.activity)
@@ -57,4 +59,6 @@ dependencies {
     implementation("com.google.firebase:firebase-auth:22.1.0")
     implementation("com.google.firebase:firebase-firestore:24.5.0")
     implementation("com.google.android.material:material:1.9.0")
+    // MPAndroidChart for graphs
+    implementation("com.github.PhilJay:MPAndroidChart:v3.1.0")
 }

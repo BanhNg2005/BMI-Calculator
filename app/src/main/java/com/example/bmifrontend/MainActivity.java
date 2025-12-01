@@ -80,7 +80,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         // Load user data if logged in
         loadUserData();
+
+
     }
+
+
 
     private void loadUserData() {
         FirebaseUser currentUser = firebaseAuth.getCurrentUser();
@@ -208,6 +212,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         imgMan.setFocusable(true);
         imgWoman.setFocusable(true);
+
+
+
     }
 
     @Override
@@ -567,9 +574,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         menuStatistics.setOnClickListener(v -> {
             dialog.dismiss();
-            Snackbar.make(findViewById(R.id.main),
-                    "Statistics - Coming Soon!",
-                    Snackbar.LENGTH_SHORT).show();
+            // Navigate to Statistics Activity
+            Intent intent = new Intent(MainActivity.this, StatisticsActivity.class);
+            startActivity(intent);
         });
 
         menuNotifications.setOnClickListener(v -> {
