@@ -560,9 +560,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         // Set click listeners
         menuHistory.setOnClickListener(v -> {
             dialog.dismiss();
-            Snackbar.make(findViewById(R.id.main),
-                    "History - Coming Soon!",
-                    Snackbar.LENGTH_SHORT).show();
+            //Intent to launch the History Activity
+            Intent intent = new Intent(MainActivity.this, HistoryActivity.class);
+            startActivity(intent);
         });
 
         menuStatistics.setOnClickListener(v -> {
