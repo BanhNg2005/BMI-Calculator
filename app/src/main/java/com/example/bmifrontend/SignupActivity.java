@@ -17,8 +17,12 @@ import com.facebook.AccessToken;
 import com.facebook.CallbackManager;
 import com.facebook.FacebookCallback;
 import com.facebook.FacebookException;
+import com.facebook.GraphRequest;
+import com.facebook.GraphResponse;
 import com.facebook.login.LoginManager;
 import com.facebook.login.LoginResult;
+import org.json.JSONException;
+import org.json.JSONObject;
 import com.google.android.gms.auth.api.signin.GoogleSignIn;
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
 import com.google.android.gms.auth.api.signin.GoogleSignInClient;
@@ -154,7 +158,7 @@ public class SignupActivity extends AppCompatActivity {
         if (!validatePassword(password)) return;
         if (!validateConfirmPassword(password, confirmPassword)) return;
 
-        // Show progress
+        // Show loading
         showLoading(true);
 
         // Create user account
@@ -281,7 +285,6 @@ public class SignupActivity extends AppCompatActivity {
                     if (task.isSuccessful()) {
                         saveUserToFirestore(user, username, "email");
                     } else {
-                        showLoading(false);
                         String errorMsg = "Failed to update profile";
                         if (task.getException() != null) {
                             errorMsg += ": " + task.getException().getMessage();
@@ -303,16 +306,20 @@ public class SignupActivity extends AppCompatActivity {
 
         db.collection("users").document(user.getUid())
                 .set(userData)
-                .addOnSuccessListener(aVoid -> {
-                    showLoading(false);
-                    Toast.makeText(SignupActivity.this, "Registration successful!", Toast.LENGTH_SHORT).show();
-                    navigateToMainActivity();
-                })
-                .addOnFailureListener(e -> {
-                    showLoading(false);
-                    Toast.makeText(SignupActivity.this, "Failed to save user data", Toast.LENGTH_SHORT).show();
-                    navigateToMainActivity();
-                });
+                .addOnSuccessListener(aVoid -> navigateToMainActivity())
+                .addOnFailureListener(e -> navigateToMainActivity());
+    }
+
+    private void saveUserToFirestoreAsync(FirebaseUser user, String username, String authProvider) {
+        Map<String, Object> userData = new HashMap<>();
+        userData.put("username", username);
+        userData.put("email", user.getEmail());
+        userData.put("authProvider", authProvider);
+        userData.put("isGuest", false);
+        userData.put("createdAt", System.currentTimeMillis());
+
+        // Fire and forget - save in background, don't wait for completion
+        db.collection("users").document(user.getUid()).set(userData);
     }
 
     private void setupGoogleSignIn() {
@@ -365,16 +372,59 @@ public class SignupActivity extends AppCompatActivity {
 
     private void handleFacebookAccessToken(AccessToken token) {
         showLoading(true);
+
+        // Fetch user data from Facebook Graph API
+        GraphRequest request = GraphRequest.newMeRequest(
+                token,
+                (object, response) -> {
+                    try {
+                        if (object != null) {
+                            // Extract user data
+                            String facebookUserId = object.optString("id");
+                            String email = object.optString("email");
+                            String name = object.optString("name");
+
+                            // Log for debugging
+                            android.util.Log.d("FacebookSignup", "User ID: " + facebookUserId);
+                            android.util.Log.d("FacebookSignup", "Email: " + email);
+                            android.util.Log.d("FacebookSignup", "Name: " + name);
+
+                            // Proceed with Firebase authentication
+                            authenticateWithFirebase(token, email, name);
+                        } else {
+                            showLoading(false);
+                            Toast.makeText(SignupActivity.this,
+                                "Failed to fetch user data from Facebook",
+                                Toast.LENGTH_SHORT).show();
+                        }
+                    } catch (Exception e) {
+                        showLoading(false);
+                        Toast.makeText(SignupActivity.this,
+                            "Error parsing Facebook data: " + e.getMessage(),
+                            Toast.LENGTH_SHORT).show();
+                    }
+                });
+
+        // Request specific fields
+        android.os.Bundle parameters = new android.os.Bundle();
+        parameters.putString("fields", "id,name,email,picture.type(large)");
+        request.setParameters(parameters);
+        request.executeAsync();
+    }
+
+    private void authenticateWithFirebase(AccessToken token, String email, String name) {
         AuthCredential credential = FacebookAuthProvider.getCredential(token.getToken());
 
         mAuth.signInWithCredential(credential)
                 .addOnCompleteListener(this, task -> {
-                    showLoading(false);
                     if (task.isSuccessful()) {
                         FirebaseUser user = mAuth.getCurrentUser();
                         if (user != null) {
                             String username = user.getDisplayName() != null ? user.getDisplayName() : "";
-                            saveUserToFirestore(user, username, "facebook");
+                            // Save to Firestore in background (non-blocking)
+                            saveUserToFirestoreAsync(user, username, "facebook");
+                            // Navigate immediately
+                            navigateToMainActivity();
                         }
                     } else {
                         Toast.makeText(SignupActivity.this, "Facebook authentication failed", Toast.LENGTH_SHORT).show();
@@ -407,14 +457,17 @@ public class SignupActivity extends AppCompatActivity {
 
         mAuth.signInWithCredential(credential)
                 .addOnCompleteListener(this, task -> {
-                    showLoading(false);
                     if (task.isSuccessful()) {
                         FirebaseUser user = mAuth.getCurrentUser();
                         if (user != null) {
                             String username = user.getDisplayName() != null ? user.getDisplayName() : "";
-                            saveUserToFirestore(user, username, "google");
+                            // Save to Firestore in background (non-blocking)
+                            saveUserToFirestoreAsync(user, username, "google");
+                            // Navigate immediately
+                            navigateToMainActivity();
                         }
                     } else {
+                        showLoading(false);
                         Toast.makeText(SignupActivity.this, "Google authentication failed", Toast.LENGTH_SHORT).show();
                     }
                 });

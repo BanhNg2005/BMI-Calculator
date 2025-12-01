@@ -1,9 +1,26 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
     <!-- Base application theme. -->
     <style name="Base.Theme.BMIFrontEnd" parent="Theme.Material3.DayNight.NoActionBar">
-        <!-- Customize your light theme here. -->
-        <!-- <item name="colorPrimary">@color/my_light_primary</item> -->
+        <!-- Light theme colors -->
+        <item name="colorPrimary">@color/buttonBackground</item>
+        <item name="colorOnPrimary">@color/buttonText</item>
+        <item name="colorSurface">@color/cardBackground</item>
+        <item name="colorOnSurface">@color/textPrimary</item>
+        <item name="colorOnSurfaceVariant">@color/textSecondary</item>
+        <item name="android:colorBackground">@color/background</item>
+        <item name="colorOnBackground">@color/textPrimary</item>
+
+        <!-- Text Input Style -->
+        <item name="textInputStyle">@style/Widget.App.TextInputLayout</item>
     </style>
 
     <style name="Theme.BMIFrontEnd" parent="Base.Theme.BMIFrontEnd" />
+
+    <!-- Custom TextInputLayout Style -->
+    <style name="Widget.App.TextInputLayout" parent="Widget.Material3.TextInputLayout.OutlinedBox">
+        <item name="boxStrokeColor">@color/borderColor</item>
+        <item name="boxBackgroundColor">@color/inputBackground</item>
+        <item name="hintTextColor">@color/inputHint</item>
+        <item name="android:textColorHint">@color/inputHint</item>
+    </style>
 </resources>

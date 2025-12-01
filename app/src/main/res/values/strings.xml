@@ -28,8 +28,10 @@
     <string name="default_web_client_id">703565416770-PLACEHOLDER.apps.googleusercontent.com</string>
 
     <!-- Facebook App ID - You need to get this from Facebook Developer Console -->
-    <string name="facebook_app_id">YOUR_FACEBOOK_APP_ID</string>
-    <string name="fb_login_protocol_scheme">fbYOUR_FACEBOOK_APP_ID</string>
+    <string name="facebook_app_id">866344092480665</string>
+    <string name="facebook_client_token">7a7aad0d84691bb5835d0edfa00ae7ff</string>
+    <string name="fb_login_protocol_scheme">fb866344092480665</string>
+    <string name="google_client_id">703565416770-qhba7oa478mp9gr37rk188obh9rultpr.apps.googleusercontent.com</string>
 
     <string-array name="spinner_items">
         <item>Male</item>
@@ -104,4 +106,5 @@
     <string name="item_measurement_menu">Item History Menu</string>
     <string name="edit_measurement">Edit</string>
     <string name="delete_measurement">Delete</string>
+    <string name="desc_settings">Open settings</string>
 </resources>

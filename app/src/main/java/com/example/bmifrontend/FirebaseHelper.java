@@ -261,6 +261,10 @@ public class FirebaseHelper {
                 .setValue(System.currentTimeMillis());
     }
 
+    public void signOut() {
+        firebaseAuth.signOut();
+    }
+
     // Interfaces for callbacks
     public interface OnCompleteListener {
         void onSuccess();
