@@ -25,6 +25,10 @@
             android:value="@string/facebook_client_token"/>
 
         <activity
+            android:name=".HistoryActivity"
+            android:exported="false" />
+
+        <activity
             android:name=".WelcomeActivity"
             android:exported="true">
             <intent-filter>
