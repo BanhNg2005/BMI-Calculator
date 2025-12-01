@@ -1,10 +1,37 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <!-- Light Mode Theme Colors -->
+    <color name="background">#FAF6F3</color>
+    <color name="cardBackground">#FFFFFFFF</color>
+    <color name="inputBackground">#FFFFFFFF</color>
+    <color name="tableHeaderBackground">#F0F0F0</color>
+    <color name="tableRowBackground">#FFFFFF</color>
+    <color name="tableRowAltBackground">#F8F8F8</color>
+    <color name="dividerColor">#E8ECF4</color>
+
+    <!-- Light Mode Text Colors -->
+    <color name="textPrimary">#222222</color>
+    <color name="textSecondary">#6A707C</color>
+    <color name="inputHint">#9E9E9E</color>
+
+    <!-- Light Mode Buttons -->
+    <color name="buttonBackground">#000000</color>
+    <color name="buttonText">#FFFFFF</color>
+
+    <!-- Light Mode Icons & Borders -->
+    <color name="iconTint">#222222</color>
+    <color name="borderColor">#E4E0DA</color>
+    <color name="genderBackground">#FBF8F3</color>
+    <color name="genderSelected">#FFF1C4</color>
+
+    <!-- Legacy/Base Colors -->
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
     <color name="grey">#959595</color>
     <color name="primary">#FF14182B</color>
     <color name="secondary">#FF222842</color>
+
+    <!-- BMI Color Bar - Same in both themes -->
     <color name="lightUnderweight">#FFFFC79C</color>
     <color name="darkUnderweight">#FFFF6F00</color>
     <color name="lightNormal">#FF8FFFA2</color>
