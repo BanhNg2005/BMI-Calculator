@@ -1,6 +1,7 @@
 {
   "project_info": {
     "project_number": "703565416770",
+    "firebase_url": "https://bmicalculatordb-default-rtdb.firebaseio.com",
     "project_id": "bmicalculatordb",
     "storage_bucket": "bmicalculatordb.firebasestorage.app"
   },
@@ -12,7 +13,12 @@
           "package_name": "com.example.bmifrontend"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "703565416770-qhba7oa478mp9gr37rk188obh9rultpr.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyBhGFJY4IfW9oQJZWhQFfhrKS8WgurS3y4"
@@ -20,7 +26,12 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "703565416770-qhba7oa478mp9gr37rk188obh9rultpr.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
         }
       }
     }

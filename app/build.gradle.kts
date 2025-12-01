@@ -1,8 +1,6 @@
 plugins {
-    alias(libs.plugins.android.application)
-    alias(libs.plugins.google.gms.google.services)
-//    id("com.google.gms.google-services")
-//    id("com.android.application")
+    id("com.android.application")
+    id("com.google.gms.google-services")
 }
 
 android {
@@ -36,6 +34,7 @@ android {
 
 dependencies {
 
+    implementation("com.google.android.material:material:1.9.0")
     implementation(libs.appcompat)
     implementation(libs.material)
     implementation(libs.activity)
@@ -49,12 +48,13 @@ dependencies {
     testImplementation(libs.junit)
     androidTestImplementation(libs.ext.junit)
     androidTestImplementation(libs.espresso.core)
+    // Import the Firebase BoM
     implementation(platform("com.google.firebase:firebase-bom:34.6.0"))
     implementation("com.google.firebase:firebase-analytics")
     // Google Sign-In
     implementation("com.google.android.gms:play-services-auth:20.7.0")
     // Facebook Login
-    implementation("com.facebook.android:facebook-login:16.0.0")
+    implementation("com.facebook.android:facebook-login:latest.release")
     // Firebase Auth & Firestore
     implementation("com.google.firebase:firebase-auth:22.1.0")
     implementation("com.google.firebase:firebase-firestore:24.5.0")

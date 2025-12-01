@@ -13,9 +13,11 @@ import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.TextView;
+import android.content.SharedPreferences;
 
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.app.AppCompatDelegate;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
@@ -23,6 +25,7 @@ import androidx.core.view.WindowInsetsCompat;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.snackbar.Snackbar;
 import com.google.android.material.textfield.TextInputEditText;
+import com.google.android.material.switchmaterial.SwitchMaterial;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 
@@ -52,6 +55,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        // Apply saved theme preference before setting content view
+        SharedPreferences prefs = getSharedPreferences("app_prefs", MODE_PRIVATE);
+        boolean darkMode = prefs.getBoolean("pref_dark_mode", false);
+        AppCompatDelegate.setDefaultNightMode(
+                darkMode ? AppCompatDelegate.MODE_NIGHT_YES : AppCompatDelegate.MODE_NIGHT_NO
+        );
+
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_main);
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
@@ -157,8 +168,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     private void updateGenderSelection() {
-        int selectedColor = Color.parseColor("#FFF1C4");
-        int defaultColor = Color.parseColor("#fbf8f3");
+        int selectedColor = getResources().getColor(R.color.genderSelected, getTheme());
+        int defaultColor = getResources().getColor(R.color.genderBackground, getTheme());
 
         if ("male".equals(selectedGender)) {
             imgMan.setBackgroundTintList(ColorStateList.valueOf(selectedColor));
@@ -216,11 +227,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         if (id == R.id.btnBmiGoal) {
             showBmiGoalDialog();
         }
+        // button settings (need the sign out button and light/dark mode toggle)
         if (id == R.id.btnSettings) {
-            // Handle settings button click
-            Snackbar.make(findViewById(R.id.main),
-                    "Settings - Coming Soon!",
-                    Snackbar.LENGTH_SHORT).show();
+            // Open settings dialog
+            showSettingsDialog();
         }
         if (id == R.id.btnProfile) {
             // Show profile menu dialog
@@ -557,9 +567,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         // Set click listeners
         menuHistory.setOnClickListener(v -> {
             dialog.dismiss();
-            Snackbar.make(findViewById(R.id.main),
-                    "History - Coming Soon!",
-                    Snackbar.LENGTH_SHORT).show();
+            //Intent to launch the History Activity
+            Intent intent = new Intent(MainActivity.this, HistoryActivity.class);
+            startActivity(intent);
         });
 
         menuStatistics.setOnClickListener(v -> {
@@ -586,4 +596,50 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             );
         }
     }
+
+    // settings dialog with sign out and light/dark toggle
+    private void showSettingsDialog() {
+        final Dialog dialog = new Dialog(this);
+        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
+        dialog.setContentView(R.layout.dialog_settings);
+        dialog.setCancelable(true);
+
+        MaterialButton btnSignOut = dialog.findViewById(R.id.btnSignOut);
+        SwitchMaterial switchTheme = dialog.findViewById(R.id.switchTheme);
+
+        SharedPreferences prefs = getSharedPreferences("app_prefs", MODE_PRIVATE);
+        boolean darkMode = prefs.getBoolean("pref_dark_mode", false);
+        switchTheme.setChecked(darkMode);
+
+        switchTheme.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            prefs.edit().putBoolean("pref_dark_mode", isChecked).apply();
+            AppCompatDelegate.setDefaultNightMode(
+                    isChecked ? AppCompatDelegate.MODE_NIGHT_YES : AppCompatDelegate.MODE_NIGHT_NO
+            );
+            Snackbar.make(findViewById(R.id.main),
+                    isChecked ? "Dark mode enabled" : "Light mode enabled",
+                    Snackbar.LENGTH_SHORT).show();
+        });
+
+        btnSignOut.setOnClickListener(v -> {
+            firebaseHelper.signOut();
+            dialog.dismiss();
+
+            // Navigate to WelcomeActivity
+            Intent intent = new Intent(MainActivity.this, WelcomeActivity.class);
+            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+            startActivity(intent);
+            finish();
+        });
+
+        dialog.show();
+
+        if (dialog.getWindow() != null) {
+            dialog.getWindow().setLayout(
+                    (int) (getResources().getDisplayMetrics().widthPixels * 0.85),
+                    LinearLayout.LayoutParams.WRAP_CONTENT
+            );
+        }
+    }
 }
+
