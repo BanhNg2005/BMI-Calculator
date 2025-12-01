@@ -66,10 +66,12 @@ public class WelcomeActivity extends AppCompatActivity {
     private void setupListeners() {
         btnLogin.setOnClickListener(v -> {
             startActivity(new Intent(WelcomeActivity.this, SigninActivity.class));
+            finish(); // Close WelcomeActivity when going to login
         });
 
         btnRegister.setOnClickListener(v -> {
             startActivity(new Intent(WelcomeActivity.this, SignupActivity.class));
+            finish(); // Close WelcomeActivity when going to register
         });
 
         tvContinueAsGuest.setOnClickListener(v -> showGuestLoginDialog());
