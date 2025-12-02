@@ -43,6 +43,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     // Goal tracking variables
     private float goalBmi = 0f;
+    private float startBmi = 0f;
     private float currentBmi = 0f;
     private float currentWeight = 0f;
     private float currentHeight = 0f;
@@ -80,11 +81,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         // Load user data if logged in
         loadUserData();
-
-
     }
-
-
 
     private void loadUserData() {
         FirebaseUser currentUser = firebaseAuth.getCurrentUser();
@@ -145,6 +142,15 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             // Load goal BMI if exists
             if (user.getPersonalInfo().getGoalBmi() > 0) {
                 goalBmi = user.getPersonalInfo().getGoalBmi();
+            }
+        }
+
+        // Load start BMI from current goal if exists
+        if (user.getGoals() != null && user.getGoals().getCurrentGoal() != null) {
+            User.Goal currentGoal = user.getGoals().getCurrentGoal();
+            if (currentGoal.getStartWeight() > 0 && user.getPersonalInfo().getHeight() > 0) {
+                float heightInMeters = user.getPersonalInfo().getHeight() / 100;
+                startBmi = currentGoal.getStartWeight() / (heightInMeters * heightInMeters);
             }
         }
 
@@ -212,9 +218,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         imgMan.setFocusable(true);
         imgWoman.setFocusable(true);
-
-
-
     }
 
     @Override
@@ -227,13 +230,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         if (id == R.id.btnBmiGoal) {
             showBmiGoalDialog();
         }
-        // button settings (need the sign out button and light/dark mode toggle)
         if (id == R.id.btnSettings) {
-            // Open settings dialog
             showSettingsDialog();
         }
         if (id == R.id.btnProfile) {
-            // Show profile menu dialog
             showProfileMenu();
         }
         if (id == R.id.imgMan) {
@@ -326,11 +326,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         FirebaseUser currentUser = firebaseAuth.getCurrentUser();
 
         if (currentUser == null) {
-            // Guest mode - don't save
             return;
         }
 
-        // First, update personal info
         firebaseHelper.updatePersonalInfo(age, selectedGender, height, weight,
                 new FirebaseHelper.OnCompleteListener() {
                     @Override
@@ -340,16 +338,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
                     @Override
                     public void onFailure(String error) {
-                        // Silent fail - personal info update is not critical
+                        // Silent fail
                     }
                 });
 
-        // Then, add this as a new measurement
         firebaseHelper.addMeasurement(weight, height, bmi, category, "",
                 new FirebaseHelper.OnCompleteListener() {
                     @Override
                     public void onSuccess() {
-                        // Show subtle success indicator
                         Snackbar.make(findViewById(R.id.main),
                                 "BMI saved to your history!",
                                 Snackbar.LENGTH_SHORT).show();
@@ -386,13 +382,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             return;
         }
 
-        // Get current values
         String ageStr = etAge.getText() != null ? etAge.getText().toString() : "";
         String weightStr = etWeight.getText() != null ? etWeight.getText().toString() : "";
         String heightStr = etHeight.getText() != null ? etHeight.getText().toString() : "";
 
         if (ageStr.isEmpty() || weightStr.isEmpty() || heightStr.isEmpty() || selectedGender == null) {
-            return; // Not enough info to save
+            return;
         }
 
         try {
@@ -413,12 +408,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                         }
                     });
         } catch (NumberFormatException e) {
-            // Invalid input, don't save
+            // Invalid input
         }
     }
 
     private void showBmiGoalDialog() {
-        // Check if current BMI is calculated
         if (currentBmi == 0f || currentHeight == 0f) {
             Snackbar.make(findViewById(R.id.main), "Please calculate your BMI first!", Snackbar.LENGTH_SHORT).show();
             return;
@@ -429,7 +423,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         dialog.setContentView(R.layout.activity_weight_goal);
         dialog.setCancelable(true);
 
-        // Initialize dialog views
         TextView tvCurrentBmi = dialog.findViewById(R.id.tvCurrentBmi);
         TextInputEditText etGoalBmi = dialog.findViewById(R.id.etGoalBmi);
         LinearLayout progressSection = dialog.findViewById(R.id.progressSection);
@@ -438,14 +431,19 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         MaterialButton btnCancel = dialog.findViewById(R.id.btnCancel);
         MaterialButton btnSetGoal = dialog.findViewById(R.id.btnSetGoal);
 
-        // Set current BMI
         tvCurrentBmi.setText(String.format("%.2f", currentBmi));
 
-        // If goal already exists, show progress
+        // If goal already exists, show it and calculate progress
         if (goalBmi > 0) {
             etGoalBmi.setText(String.valueOf(goalBmi));
             progressSection.setVisibility(View.VISIBLE);
-            updateProgress(progressBar, tvRemainingValue);
+
+            // Calculate and display current progress
+            int progress = calculateProgress(startBmi, currentBmi, goalBmi);
+            progressBar.setProgress(progress);
+
+            float bmiRemaining = Math.abs(goalBmi - currentBmi);
+            tvRemainingValue.setText(String.format("%.2f BMI remaining", bmiRemaining));
         }
 
         btnCancel.setOnClickListener(v -> dialog.dismiss());
@@ -477,15 +475,18 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 }
 
                 goalBmi = goal;
+                startBmi = currentBmi; // Set start BMI to current BMI when setting goal
 
-                // Calculate target weight based on goal BMI
                 float targetWeight = goalBmi * currentHeight * currentHeight;
 
-                // Save to Firebase
                 saveGoalToFirebase(targetWeight, goal);
 
                 progressSection.setVisibility(View.VISIBLE);
-                updateProgress(progressBar, tvRemainingValue);
+
+                // Initial progress is 0 when just set
+                progressBar.setProgress(0);
+                float bmiRemaining = Math.abs(goalBmi - currentBmi);
+                tvRemainingValue.setText(String.format("%.2f BMI remaining", bmiRemaining));
 
                 Snackbar.make(findViewById(R.id.main),
                         String.format("BMI goal set! Target weight: %.1f kg", targetWeight),
@@ -500,13 +501,31 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         dialog.show();
 
-        // Set dialog width
         if (dialog.getWindow() != null) {
             dialog.getWindow().setLayout(
                     (int) (getResources().getDisplayMetrics().widthPixels * 0.9),
                     LinearLayout.LayoutParams.WRAP_CONTENT
             );
         }
+    }
+
+    private int calculateProgress(float startBmi, float currentBmi, float goalBmi) {
+        // Calculate the total distance from start to goal
+        float totalDistance = Math.abs(goalBmi - startBmi);
+
+        // If there's no distance, we're already at goal
+        if (totalDistance == 0) {
+            return 100;
+        }
+
+        // Calculate how much progress has been made
+        float progressMade = Math.abs(startBmi - currentBmi);
+
+        // Calculate percentage
+        int percentage = (int) ((progressMade / totalDistance) * 100);
+
+        // Cap at 100%
+        return Math.min(100, Math.max(0, percentage));
     }
 
     private void saveGoalToFirebase(float targetWeight, float targetBmi) {
@@ -519,7 +538,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             return;
         }
 
-        // Set target date to 3 months from now (arbitrary default)
         long targetDate = System.currentTimeMillis() + (90L * 24 * 60 * 60 * 1000);
 
         firebaseHelper.setBmiGoal(targetWeight, targetBmi, currentWeight, targetDate,
@@ -540,41 +558,24 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 });
     }
 
-    private void updateProgress(ProgressBar progressBar, TextView tvRemainingValue) {
-        if (goalBmi <= 0 || currentBmi <= 0) return;
-
-        float difference = Math.abs(goalBmi - currentBmi);
-
-        // For now, progress is 0 when just set
-        // Later when user updates weight, this will show real progress
-        progressBar.setProgress(0);
-
-        String remaining = String.format("%.2f BMI", difference);
-        tvRemainingValue.setText(remaining);
-    }
-
     private void showProfileMenu() {
         final Dialog dialog = new Dialog(this);
         dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
         dialog.setContentView(R.layout.dialog_profile_menu);
         dialog.setCancelable(true);
 
-        // Get menu items
         LinearLayout menuHistory = dialog.findViewById(R.id.menuHistory);
         LinearLayout menuStatistics = dialog.findViewById(R.id.menuStatistics);
         LinearLayout menuNotifications = dialog.findViewById(R.id.menuNotifications);
 
-        // Set click listeners
         menuHistory.setOnClickListener(v -> {
             dialog.dismiss();
-            //Intent to launch the History Activity
             Intent intent = new Intent(MainActivity.this, HistoryActivity.class);
             startActivity(intent);
         });
 
         menuStatistics.setOnClickListener(v -> {
             dialog.dismiss();
-            // Navigate to Statistics Activity
             Intent intent = new Intent(MainActivity.this, StatisticsActivity.class);
             startActivity(intent);
         });
@@ -588,7 +589,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         dialog.show();
 
-        // Set dialog width
         if (dialog.getWindow() != null) {
             dialog.getWindow().setLayout(
                     (int) (getResources().getDisplayMetrics().widthPixels * 0.85),
@@ -597,7 +597,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
     }
 
-    // settings dialog with sign out and light/dark toggle
     private void showSettingsDialog() {
         final Dialog dialog = new Dialog(this);
         dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
@@ -625,7 +624,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             firebaseHelper.signOut();
             dialog.dismiss();
 
-            // Navigate to WelcomeActivity
             Intent intent = new Intent(MainActivity.this, WelcomeActivity.class);
             intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
             startActivity(intent);
@@ -642,4 +640,3 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
     }
 }
-
