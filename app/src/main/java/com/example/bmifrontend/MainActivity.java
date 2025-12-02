@@ -145,25 +145,16 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             }
         }
 
-        // Load start BMI from current goal if exists
-        if (user.getGoals() != null && user.getGoals().getCurrentGoal() != null) {
-            User.Goal currentGoal = user.getGoals().getCurrentGoal();
-            if (currentGoal.getStartWeight() > 0 && user.getPersonalInfo().getHeight() > 0) {
-                float heightInMeters = user.getPersonalInfo().getHeight() / 100;
-                startBmi = currentGoal.getStartWeight() / (heightInMeters * heightInMeters);
+//        // Auto-calculate BMI if we have all the data
+            if (etAge.getText() != null && !etAge.getText().toString().isEmpty() &&
+                    etWeight.getText() != null && !etWeight.getText().toString().isEmpty() &&
+                    etHeight.getText() != null && !etHeight.getText().toString().isEmpty() &&
+                    selectedGender != null) {
+                calculateBMI(false); // Don't save to Firebase on load
             }
-        }
-
-        // Auto-calculate BMI if we have all the data
-        if (etAge.getText() != null && !etAge.getText().toString().isEmpty() &&
-                etWeight.getText() != null && !etWeight.getText().toString().isEmpty() &&
-                etHeight.getText() != null && !etHeight.getText().toString().isEmpty() &&
-                selectedGender != null) {
-            calculateBMI();
-        }
 
         Snackbar.make(findViewById(R.id.main),
-                "Welcome back! Your data has been loaded.",
+                "Welcome back! Let's continue your health journey.",
                 Snackbar.LENGTH_SHORT).show();
     }
 
@@ -247,8 +238,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             savePersonalInfoToFirebase();
         }
     }
-
     private void calculateBMI() {
+        calculateBMI(true); // Save to Firebase by default
+    }
+    private void calculateBMI(boolean saveToFirebase) {
         if (etWeight.getText().toString().isEmpty() || etHeight.getText().toString().isEmpty()) {
             Snackbar.make(findViewById(R.id.main), "Please enter weight and height!", Snackbar.LENGTH_SHORT).show();
             return;
@@ -311,8 +304,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 category = "Obese";
             }
 
-            // Save to Firebase
-            saveBmiCalculationToFirebase(weight, height * 100, bmi, category, age);
+            // Only save to Firebase if explicitly requested
+            if (saveToFirebase) {
+                saveBmiCalculationToFirebase(weight, height * 100, bmi, category, age);
+            }
 
         } else {
             tvBmiCategory.setText("");

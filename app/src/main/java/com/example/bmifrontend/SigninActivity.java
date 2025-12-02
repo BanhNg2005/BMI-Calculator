@@ -110,6 +110,9 @@ public class SigninActivity extends AppCompatActivity {
         tvForgotPassword.setOnClickListener(v -> handleForgotPassword());
 
         btnBack.setOnClickListener(v -> {
+            Intent intent = new Intent(SigninActivity.this, WelcomeActivity.class);
+            intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+            startActivity(intent);
             finish();
         });
 
