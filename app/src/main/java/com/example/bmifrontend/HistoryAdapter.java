@@ -144,7 +144,7 @@ public class HistoryAdapter extends RecyclerView.Adapter<HistoryAdapter.ViewHold
 
         public void bind(User.Measurement measurement) {
             if (tvDate != null) {
-                SimpleDateFormat sdf = new SimpleDateFormat("MMM dd, yyyy HH:mm", Locale.getDefault());
+                SimpleDateFormat sdf = new SimpleDateFormat("MMM dd, yyyy", Locale.getDefault());
                 String date = sdf.format(new Date(measurement.getTimestamp()));
                 tvDate.setText(date);
             }
