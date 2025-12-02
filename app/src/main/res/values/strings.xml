@@ -36,7 +36,6 @@
     <string-array name="spinner_items">
         <item>Male</item>
         <item>Female</item>
-        <item>Gook</item>
     </string-array>
 
     <string name="login">Login</string>
